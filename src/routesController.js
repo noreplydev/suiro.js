@@ -1,4 +1,4 @@
-const { addRouter } = require("../routes/add")
+const { addRouter } = require("./routes/add")
 
 const routes = {
   '/add': addRouter
