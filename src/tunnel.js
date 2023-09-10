@@ -1,19 +1,16 @@
-const http2 = require('http2')
-const fs = require('fs')
-const { routesController } = require('./routesController')
+const net = require('net')
 
-const server = http2.createSecureServer({
-  key: fs.readFileSync('keys/localhost-privkey.pem'),
-  cert: fs.readFileSync('keys/localhost-cert.pem'),
-  allowHTTP1: true
+const tunnelingServer = net.createServer((socket) => {
+  socket.on('connection', (client) => {
+    console.log('client connected', client)
+  })
+
+  socket.on('data', (data) => {
+    console.log('Client: ', data.toString())
+    socket.end("This tunnel has been closed")
+  })
 })
 
-server.on('error', err => {
-  console.error(err)
-})
-
-server.on('stream', routesController)
-
-server.listen(4040, () => {
-  console.log('\nServer listening on port 4040 \n')
+tunnelingServer.listen(8080, () => {
+  console.log('tunneling server listening on port 8080')
 })

@@ -2,14 +2,13 @@
   "name": "tunnel",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "dev": "nodemon tunnel.js"
-  },
+  "main": "src/tunnel.js",
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+  "dependencies": {
+    "@types/node": "^20.6.0",
+    "node": "^20.6.0"
   }
 }
