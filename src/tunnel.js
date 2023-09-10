@@ -5,32 +5,35 @@ const { createSession, secondsToMs, removeSession } = require('alive-sessions')
 
 // http server for consumption
 http.createServer((req, res) => {
-  var body;
+  let body = '';
+  let headers = '';
 
-  body = '';
   req.on('data', function (chunk) {
     body += chunk;
   });
 
   req.on('end', function () {
-    console.log(req.method + ' ' + req.url + ' HTTP/' + req.httpVersion);
+    headers += req.method + ' ' + req.url + ' HTTP/' + req.httpVersion + '\n'
 
     for (prop in req.headers) {
-      console.log(toTitleCase(prop) + ': ' + req.headers[prop]);
+      headers += toTitleCase(prop) + ': ' + req.headers[prop] + '\n'
     }
 
+    let request = headers
     if (body.length > 0) {
-      console.log('\n' + body);
+      request += '\n' + body
     }
-    console.log('');
+
+    console.log(request)
 
     res.writeHead(200);
     res.end();
-  });
+  })
 
   req.on('err', function (err) {
     console.error(err);
-  });
+  })
+
 }).listen(3000, () => {
   console.log('http server listening on port 3000')
 })
