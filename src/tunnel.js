@@ -1,18 +1,43 @@
-const { createSession, secondsToMs, removeSession } = require('alive-sessions')
-const { nanoid } = require('nanoid')
-const express = require('express')
 const net = require('net')
+const http = require('http')
+const { nanoid } = require('nanoid')
+const { createSession, secondsToMs, removeSession } = require('alive-sessions')
 
 // http server for consumption
-const app = express()
+http.createServer((req, res) => {
+  var body;
 
-app.get('*', (req, res) => {
-  res.send('hello world')
-})
+  body = '';
+  req.on('data', function (chunk) {
+    body += chunk;
+  });
 
-app.listen(3000, () => {
+  req.on('end', function () {
+    console.log(req.method + ' ' + req.url + ' HTTP/' + req.httpVersion);
+
+    for (prop in req.headers) {
+      console.log(toTitleCase(prop) + ': ' + req.headers[prop]);
+    }
+
+    if (body.length > 0) {
+      console.log('\n' + body);
+    }
+    console.log('');
+
+    res.writeHead(200);
+    res.end();
+  });
+
+  req.on('err', function (err) {
+    console.error(err);
+  });
+}).listen(3000, () => {
   console.log('http server listening on port 3000')
 })
+
+function toTitleCase(str) {
+  return str.replace(/[a-z]*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
+}
 
 // tunneling service
 const tunnelingServer = net.createServer((socket) => {
