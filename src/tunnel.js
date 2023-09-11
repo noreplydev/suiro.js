@@ -1,7 +1,8 @@
 const net = require('net')
 const http = require('http')
+const fs = require('fs')
 const { nanoid } = require('nanoid')
-const { createSession, secondsToMs, removeSession } = require('alive-sessions')
+const { createSession, secondsToMs, removeSession, getSessionData } = require('alive-sessions')
 
 // http server for consumption
 http.createServer((req, res) => {
@@ -24,7 +25,16 @@ http.createServer((req, res) => {
       request += '\n' + body
     }
 
-    console.log(request)
+    // get the sessionID based on the request endoint
+    const sessions = fs.readFileSync('sessions.json')
+    const sessionsJson = JSON.parse(sessions)
+    const sessionID = sessionsJson[req.url.split('/')[1]]
+
+    // get the session data
+    const sessionData = getSessionData(sessionID)
+
+    // send the request to the client
+    sessionData.write(request)
 
     res.writeHead(200);
     res.end();
@@ -46,15 +56,26 @@ function toTitleCase(str) {
 const tunnelingServer = net.createServer((socket) => {
   // create a session for each client
   const sessionId = nanoid()
+  const sessionEndpoint = nanoid()
+  console.log(sessionEndpoint)
 
   // create a session and close after timeout
   createSession({
     sessionID: sessionId,
     expireMs: secondsToMs(120),
+    data: socket,
     action: () => {
       socket.end()
     }
   })
+
+  // read the json file 
+  const sessions = fs.readFileSync('sessions.json')
+  const sessionsJson = JSON.parse(sessions)
+  sessionsJson[sessionEndpoint] = sessionId
+
+  // write the session to the json file
+  fs.writeFileSync('sessions.json', JSON.stringify(sessionsJson))
 
   socket.on('connection', (client) => {
     console.log('client connected', client)
