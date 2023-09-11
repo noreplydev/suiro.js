@@ -7,7 +7,6 @@ const client = net.createConnection({
 
 client.on('connect', (socket) => {
   console.log('connected to tunneling server')
-  client.write('hello from client')
 })
 
 client.on('data', (data) => {

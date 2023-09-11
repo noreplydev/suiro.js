@@ -14,6 +14,18 @@ http.createServer((req, res) => {
   });
 
   req.on('end', function () {
+    // get the sessionID based on the request endoint
+    const sessions = fs.readFileSync('sessions.json')
+    const sessionsJson = JSON.parse(sessions)
+    const sessionID = sessionsJson[req.url.split('/')[1]]
+
+    // avoid requests without sessionID
+    if (!sessionID) {
+      res.writeHead(404);
+      res.end();
+      return
+    }
+
     headers += req.method + ' ' + req.url + ' HTTP/' + req.httpVersion + '\n'
 
     for (prop in req.headers) {
@@ -24,11 +36,6 @@ http.createServer((req, res) => {
     if (body.length > 0) {
       request += '\n' + body
     }
-
-    // get the sessionID based on the request endoint
-    const sessions = fs.readFileSync('sessions.json')
-    const sessionsJson = JSON.parse(sessions)
-    const sessionID = sessionsJson[req.url.split('/')[1]]
 
     // get the session data
     const sessionData = getSessionData(sessionID)
@@ -54,10 +61,28 @@ function toTitleCase(str) {
 
 // tunneling service
 const tunnelingServer = net.createServer((socket) => {
+  let sessionVars = addSession(socket)
+  console.log('[NEW]', sessionVars.sessionId, ':', sessionVars.sessionEndpoint)
+
+  socket.on('data', (data) => {
+    console.log('[DATA] ', sessionVars.sessionId, ': ', data.toString())
+  })
+
+  socket.on('end', () => {
+    removeSession(sessionVars.sessionId)
+    console.log('[CLOSED] ', sessionVars.sessionId)
+  })
+})
+
+tunnelingServer.listen(8080, () => {
+  console.log('tunneling server listening on port 8080')
+})
+
+function addSession(socket) {
   // create a session for each client
-  const sessionId = nanoid()
-  const sessionEndpoint = nanoid()
-  console.log(sessionEndpoint)
+  const sessionId = nanoid().toString()
+  const sessionEndpoint = nanoid().toString()
+
 
   // create a session and close after timeout
   createSession({
@@ -77,20 +102,5 @@ const tunnelingServer = net.createServer((socket) => {
   // write the session to the json file
   fs.writeFileSync('sessions.json', JSON.stringify(sessionsJson))
 
-  socket.on('connection', (client) => {
-    console.log('client connected', client)
-  })
-
-  socket.on('data', (data) => {
-    console.log('Client: ', data.toString())
-  })
-
-  socket.on('end', () => {
-    removeSession(sessionId)
-    console.log('session expired: ', sessionId)
-  })
-})
-
-tunnelingServer.listen(8080, () => {
-  console.log('tunneling server listening on port 8080')
-})
+  return { sessionEndpoint, sessionId }
+}
