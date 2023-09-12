@@ -10,7 +10,10 @@ client.on('connect', (socket) => {
 })
 
 client.on('data', (data) => {
-  console.log('Server: ', data.toString())
+  const stream = data.toString().split('\n')
+  console.log('Server: ', stream[1])
+
+  client.write(`${stream[0]}\n${stream[1]}}`)
 })
 
 client.on('end', () => {

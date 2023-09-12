@@ -32,19 +32,42 @@ http.createServer((req, res) => {
       headers += toTitleCase(prop) + ': ' + req.headers[prop] + '\n'
     }
 
-    let request = headers
+    // append the requestID on the first line
+    const requestID = nanoid().toString()
+    let request = requestID + '\n'
+
+    // append the headers
+    request += headers
+
+    // append the body if exists
     if (body.length > 0) {
       request += '\n' + body
     }
 
     // get the session data
-    const sessionData = getSessionData(sessionID)
+    const sessionData = getSessionData(sessionID).socket
 
     // send the request to the client
     sessionData.write(request)
 
-    res.writeHead(200);
-    res.end();
+    // wait for the response
+    const interval = setInterval(() => {
+      if (sessionData.messageList[requestID]) {
+
+        // ON THIS PART THE RESPONSE HEADERS HAS TO BE USING THE 
+        // HEADERS FROM THE RESPONSE OF THE CLIENT NOT THE DEFAULT BUT ITS OKAY
+
+        // send the response to the client
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        // write the body
+        res.write(sessionData.messageList[requestID])
+        res.end();
+      }
+    }, 100)
+
+    // we can close the interval after 10 seconds using set timeout
+    clearInterval(interval)
+    return
   })
 
   req.on('err', function (err) {
@@ -66,10 +89,13 @@ const tunnelingServer = net.createServer((socket) => {
 
   socket.on('data', (data) => {
     console.log('[DATA] ', sessionVars.sessionId, ': ', data.toString())
+    const sessionData = getSessionData(sessionVars.sessionId)
+    // get first line which the requestID
+    const requestID = data.toString().split('\n')[0]
+    sessionData.messageList[requestID] = data.toString().split('\n')[1]
   })
 
   socket.on('end', () => {
-    removeSession(sessionVars.sessionId)
     console.log('[CLOSED] ', sessionVars.sessionId)
   })
 })
@@ -83,12 +109,14 @@ function addSession(socket) {
   const sessionId = nanoid().toString()
   const sessionEndpoint = nanoid().toString()
 
-
   // create a session and close after timeout
   createSession({
     sessionID: sessionId,
-    expireMs: secondsToMs(120),
-    data: socket,
+    expireMs: secondsToMs(60),
+    data: {
+      socket: socket,
+      messageList: {},
+    },
     action: () => {
       socket.end()
     }
