@@ -127,6 +127,11 @@ function addSession(socket) {
     }
   })
 
+  // create a json file if not exists
+  if (!fs.existsSync('sessions.json')) {
+    fs.writeFileSync('sessions.json', '{}')
+  }
+
   // read the json file 
   const sessions = fs.readFileSync('sessions.json')
   const sessionsJson = JSON.parse(sessions)
