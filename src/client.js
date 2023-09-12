@@ -13,7 +13,7 @@ client.on('data', (data) => {
   const stream = data.toString().split('\n')
   console.log('Server: ', stream[1])
 
-  client.write(`${stream[0]}\n${stream[1]}}`)
+  client.write(`${stream[0]}\nResponded from the client`)
 })
 
 client.on('end', () => {

@@ -45,29 +45,34 @@ http.createServer((req, res) => {
     }
 
     // get the session data
-    const sessionData = getSessionData(sessionID).socket
+    const sessionData = getSessionData(sessionID)
 
     // send the request to the client
-    sessionData.write(request)
+    sessionData.socket.write(request)
 
     // wait for the response
     const interval = setInterval(() => {
-      if (sessionData.messageList[requestID]) {
+      const messageList = getSessionData(sessionID).messageList
 
+      if (messageList[requestID]) {
         // ON THIS PART THE RESPONSE HEADERS HAS TO BE USING THE 
         // HEADERS FROM THE RESPONSE OF THE CLIENT NOT THE DEFAULT BUT ITS OKAY
 
         // send the response to the client
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         // write the body
-        res.write(sessionData.messageList[requestID])
+        res.write(messageList[requestID])
         res.end();
+        clearInterval(interval)
+
+        // remove the request from the message list
+        // ---------------
+
+        return
       }
     }, 100)
 
     // we can close the interval after 10 seconds using set timeout
-    clearInterval(interval)
-    return
   })
 
   req.on('err', function (err) {
