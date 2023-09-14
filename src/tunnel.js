@@ -22,7 +22,7 @@ http.createServer((req, res) => {
     // avoid requests without sessionID
     if (!sessionID) {
       res.writeHead(404);
-      res.end();
+      res.end("<h1>404 Not Found</h1>");
       return
     }
 

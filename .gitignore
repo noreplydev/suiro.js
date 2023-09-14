@@ -2,3 +2,4 @@ node_modules
 localhost-cert.pem
 localhost-privkey.pem
 package-lock.json
+.env
