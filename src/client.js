@@ -1,4 +1,7 @@
 const net = require('net')
+require('dotenv').config({
+  path: '../.env'
+})
 
 const client = net.createConnection({
   host: process.env.TUNNELING_SERVER || 'localhost',
@@ -6,11 +9,6 @@ const client = net.createConnection({
 })
 
 client.on('connect', (socket) => {
-  if (!socket) {
-    console.log('× unable to connect to tunneling server')
-    process.exit(1)
-  }
-
   console.log('connected to tunneling server')
 })
 
