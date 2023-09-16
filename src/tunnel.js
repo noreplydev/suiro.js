@@ -1,8 +1,9 @@
 const net = require('net')
 const http = require('http')
-const fs = require('fs')
 const { nanoid } = require('nanoid')
-const { createSession, secondsToMs, removeSession, getSessionData } = require('alive-sessions')
+const { createSession, secondsToMs, getSessionData } = require('alive-sessions')
+const { storeSession, getSessionID } = require('./lib/sessions')
+const { getLogTime } = require('./lib/utils')
 
 // http server for consumption
 http.createServer((req, res) => {
@@ -15,12 +16,20 @@ http.createServer((req, res) => {
 
   req.on('end', function () {
     // get the sessionID based on the request endoint
-    const sessions = fs.readFileSync('sessions.json')
-    const sessionsJson = JSON.parse(sessions)
-    const sessionID = sessionsJson[req.url.split('/')[1]]
+    const sessionID = getSessionID(req.url.split('/')[1])
 
-    // avoid requests without sessionID
-    if (!sessionID) {
+    try {
+      // avoid requests without sessionID
+      if (!sessionID) {
+        res.writeHead(404);
+        res.end("<h1>404 Not Found</h1>");
+        return
+      }
+
+      // if something wrong with the sessionID an error will be thrown
+      getSessionData(sessionID)
+    } catch (e) {
+      console.log('[ERROR] Unhandeled route.')
       res.writeHead(404);
       res.end("<h1>404 Not Found</h1>");
       return
@@ -66,7 +75,7 @@ http.createServer((req, res) => {
         clearInterval(interval)
 
         // remove the request from the message list
-        // ---------------
+        delete messageList[requestID]
 
         return
       }
@@ -90,18 +99,20 @@ function toTitleCase(str) {
 // tunneling service
 const tunnelingServer = net.createServer((socket) => {
   let sessionVars = addSession(socket)
-  console.log('[NEW]', sessionVars.sessionId, ':', sessionVars.sessionEndpoint)
+
+  console.log(getLogTime() + '[NEW] ' + sessionVars.sessionId + ':   ' + sessionVars.sessionEndpoint)
 
   socket.on('data', (data) => {
-    console.log('[DATA] ', sessionVars.sessionId, ': ', data.toString())
+    console.log(getLogTime() + '[DATA] ' + sessionVars.sessionId + ': ' + data.toString())
     const sessionData = getSessionData(sessionVars.sessionId)
+
     // get first line which the requestID
     const requestID = data.toString().split('\n')[0]
     sessionData.messageList[requestID] = data.toString().split('\n')[1]
   })
 
   socket.on('end', () => {
-    console.log('[CLOSED] ', sessionVars.sessionId)
+    console.log(getLogTime() + '[CLOSED] ' + sessionVars.sessionId)
   })
 })
 
@@ -124,21 +135,12 @@ function addSession(socket) {
     },
     action: () => {
       socket.end()
+      // remove the session from the sessions file
     }
   })
 
-  // create a json file if not exists
-  if (!fs.existsSync('sessions.json')) {
-    fs.writeFileSync('sessions.json', '{}')
-  }
-
-  // read the json file 
-  const sessions = fs.readFileSync('sessions.json')
-  const sessionsJson = JSON.parse(sessions)
-  sessionsJson[sessionEndpoint] = sessionId
-
-  // write the session to the json file
-  fs.writeFileSync('sessions.json', JSON.stringify(sessionsJson))
+  // update the sessions file 
+  storeSession(sessionId, sessionEndpoint)
 
   return { sessionEndpoint, sessionId }
 }

@@ -1,10 +1,12 @@
 {
   "name": "tunnel",
   "version": "1.0.0",
-  "description": "",
+  "description": "Expose your local network to the internet deploying a tunnel server somewhere Node.js is supported.",
   "type": "commonjs",
   "main": "src/tunnel.js",
-  "scripts": {},
+  "scripts": {
+    "start-tunnel": "node src/tunnel.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
