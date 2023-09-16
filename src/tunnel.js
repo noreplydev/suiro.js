@@ -3,7 +3,7 @@ const http = require('http')
 const { nanoid } = require('nanoid')
 const { createSession, secondsToMs, getSessionData } = require('alive-sessions')
 const { storeSession, getSessionID } = require('./lib/sessions')
-const { getLogTime } = require('./lib/utils')
+const { getLogTime, toTitleCase } = require('./lib/utils')
 
 // http server for consumption
 http.createServer((req, res) => {
@@ -98,21 +98,19 @@ http.createServer((req, res) => {
   })
 
 }).listen(3000, () => {
-  console.log('http server listening on port 3000')
+  console.log('[HTTP] Listening on port 3000')
 })
-
-function toTitleCase(str) {
-  return str.replace(/[a-z]*/g, function (txt) { return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(); });
-}
 
 // tunneling service
 const tunnelingServer = net.createServer((socket) => {
   let sessionVars = addSession(socket)
 
-  console.log(getLogTime() + '[NEW] ' + sessionVars.sessionId + ':   ' + sessionVars.sessionEndpoint)
+  console.log(getLogTime() + '[NEW] ' + sessionVars.sessionId + ':  ' + sessionVars.sessionEndpoint)
 
   socket.on('data', (data) => {
-    console.log(getLogTime() + '[DATA] ' + sessionVars.sessionId + ': ' + data.toString())
+    console.log(getLogTime() + '[DATA]: ', sessionVars.sessionId)
+    console.log('\n', data.toString(), '\n')
+
     const sessionData = getSessionData(sessionVars.sessionId)
 
     // get first line which the requestID
@@ -126,7 +124,7 @@ const tunnelingServer = net.createServer((socket) => {
 })
 
 tunnelingServer.listen(8080, () => {
-  console.log('tunneling server listening on port 8080')
+  console.log('[TUNNEL] Listening on port 8080')
 })
 
 function addSession(socket) {
