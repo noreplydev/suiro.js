@@ -15,6 +15,15 @@ http.createServer((req, res) => {
   });
 
   req.on('end', function () {
+    if (!req.url.split('/')[1]) {
+      res.writeHead(200);
+      res.end(`
+        <h1>Tunnel</h1>
+        <code>https://github.com/noreplydev/tunnel.git</code>
+      `);
+      return
+    }
+
     // get the sessionID based on the request endoint
     const sessionID = getSessionID(req.url.split('/')[1])
 
