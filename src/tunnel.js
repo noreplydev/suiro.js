@@ -81,11 +81,11 @@ http.createServer((req, res) => {
         // write the body
         res.write(messageList[requestID])
         res.end();
-        clearInterval(interval)
 
         // remove the request from the message list
         delete messageList[requestID]
 
+        clearInterval(interval)
         return
       }
     }, 100)
