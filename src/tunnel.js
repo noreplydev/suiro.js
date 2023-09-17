@@ -73,13 +73,15 @@ http.createServer((req, res) => {
       const messageList = getSessionData(sessionID).messageList
 
       if (messageList[requestID]) {
-        // ON THIS PART THE RESPONSE HEADERS HAS TO BE USING THE 
-        // HEADERS FROM THE RESPONSE OF THE CLIENT NOT THE DEFAULT BUT ITS OKAY
+        const hostResponse = messageList[requestID]
 
         // send the response to the client
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.writeHead(hostResponse.statusCode, {
+          ...hostResponse.headers,
+        });
+
         // write the body
-        res.write(messageList[requestID])
+        res.write(messageList[requestID].body)
         res.end();
 
         // remove the request from the message list
@@ -115,13 +117,19 @@ const tunnelingServer = net.createServer((socket) => {
 
     // get first line which the requestID
     const requestID = data.toString().split('\n')[0]
-    sessionData.messageList[requestID] = data.toString().split('\n')[1]
+
+    try {
+      sessionData.messageList[requestID] = JSON.parse(data.toString().split('\n')[1])
+    } catch (e) {
+      console.log('the agent responded with bad format')
+    }
   })
 
   socket.on('end', () => {
-    if (removeSession(sessionVars.sessionEndpoint)) {
+    try {
+      removeSession(sessionVars.sessionEndpoint)
       console.log(getLogTime() + '[TUNNEL] CLOSED: ' + sessionVars.sessionId)
-    } else {
+    } catch (err) {
       console.log(getLogTime() + '[TUNNEL] CLOSED-WITH-ERROR: ' + sessionVars.sessionId)
     }
   })
