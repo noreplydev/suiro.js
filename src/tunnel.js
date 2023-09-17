@@ -15,7 +15,10 @@ http.createServer((req, res) => {
   });
 
   req.on('end', function () {
-    if (!req.url.split('/')[1]) {
+    // _ to ignore the empty string at the start
+    const [_, requestEndpoint, ...hostRequestEndpoint] = req.url.split('/')
+
+    if (!requestEndpoint && !hostRequestEndpoint.length) {
       res.writeHead(200);
       res.end(`
         <h1>Tunnel</h1>
@@ -25,20 +28,20 @@ http.createServer((req, res) => {
     }
 
     // get the sessionID based on the request endoint
-    const sessionID = getSessionID(req.url.split('/')[1])
+    const sessionID = getSessionID(requestEndpoint)
 
     try {
       // if something wrong with the sessionID an error will be thrown
       // by the lib
       getSessionData(sessionID)
     } catch (e) {
-      console.log(getLogTime() + '[TUNNEL] ERROR: Unhandled route ' + req.url.split('/')[1])
+      console.log(getLogTime() + '[TUNNEL] ERROR: Unhandled route ' + requestEndpoint)
       res.writeHead(404);
       res.end("<h1>404 Not Found</h1>");
       return
     }
 
-    headers += req.method + ' ' + req.url + ' HTTP/' + req.httpVersion + '\n'
+    headers += req.method + ' /' + hostRequestEndpoint.join('/') + ' HTTP/' + req.httpVersion + '\n'
 
     for (prop in req.headers) {
       headers += toTitleCase(prop) + ': ' + req.headers[prop] + '\n'
