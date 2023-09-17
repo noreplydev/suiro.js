@@ -2,7 +2,7 @@ const net = require('net')
 const http = require('http')
 const { nanoid } = require('nanoid')
 const { createSession, secondsToMs, getSessionData } = require('alive-sessions')
-const { storeSession, getSessionID } = require('./lib/sessions')
+const { storeSession, getSessionID, removeSession } = require('./lib/sessions')
 const { getLogTime, toTitleCase } = require('./lib/utils')
 
 // http server for consumption
@@ -98,17 +98,17 @@ http.createServer((req, res) => {
   })
 
 }).listen(3000, () => {
-  console.log('[HTTP] Listening on port 3000')
+  console.log(getLogTime() + '[HTTP] Listening on port 3000')
 })
 
 // tunneling service
 const tunnelingServer = net.createServer((socket) => {
   let sessionVars = addSession(socket)
 
-  console.log(getLogTime() + '[NEW] ' + sessionVars.sessionId + ':  ' + sessionVars.sessionEndpoint)
+  console.log(getLogTime() + '[TUNNEL] NEW: ' + sessionVars.sessionId + ' →	' + sessionVars.sessionEndpoint)
 
   socket.on('data', (data) => {
-    console.log(getLogTime() + '[DATA]: ', sessionVars.sessionId)
+    console.log(getLogTime() + '[TUNNEL] DATA: ', sessionVars.sessionId)
     console.log('\n', data.toString(), '\n')
 
     const sessionData = getSessionData(sessionVars.sessionId)
@@ -119,12 +119,17 @@ const tunnelingServer = net.createServer((socket) => {
   })
 
   socket.on('end', () => {
-    console.log(getLogTime() + '[CLOSED] ' + sessionVars.sessionId)
+    if (removeSession(sessionVars.sessionEndpoint)) {
+      console.log(getLogTime() + '[TUNNEL] CLOSED: ' + sessionVars.sessionId)
+    } else {
+      console.log(getLogTime() + '[TUNNEL] CLOSED-WITH-ERROR: ' + sessionVars.sessionId)
+    }
   })
+
 })
 
 tunnelingServer.listen(8080, () => {
-  console.log('[TUNNEL] Listening on port 8080')
+  console.log(getLogTime() + '[TUNNEL] Listening on port 8080')
 })
 
 function addSession(socket) {

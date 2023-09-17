@@ -38,6 +38,23 @@ function getSessionID(sessionEndpoint) {
   return sessions[sessionEndpoint]
 }
 
+function removeSession(sessionEndpoint) {
+  const sessions = getSessions()
+
+  // we only handle undefined maybe the file is empty
+  if (sessions === undefined) {
+    return undefined
+  }
+
+  if (!sessions[sessionEndpoint]) {
+    return true
+  }
+
+  // remove session
+  delete sessions[sessionEndpoint]
+  return true
+}
+
 function getSessions() {
   // create a json file if not exists
   if (!fs.existsSync(PATH)) {
@@ -57,4 +74,5 @@ function getSessions() {
 module.exports = {
   storeSession,
   getSessionID,
+  removeSession
 }
