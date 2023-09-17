@@ -28,17 +28,11 @@ http.createServer((req, res) => {
     const sessionID = getSessionID(req.url.split('/')[1])
 
     try {
-      // avoid requests without sessionID
-      if (!sessionID) {
-        res.writeHead(404);
-        res.end("<h1>404 Not Found</h1>");
-        return
-      }
-
       // if something wrong with the sessionID an error will be thrown
+      // by the lib
       getSessionData(sessionID)
     } catch (e) {
-      console.log('[ERROR] Unhandeled route.')
+      console.log(getLogTime() + '[TUNNEL] ERROR: Unhandled route ' + req.url.split('/')[1])
       res.writeHead(404);
       res.end("<h1>404 Not Found</h1>");
       return
@@ -107,7 +101,7 @@ http.createServer((req, res) => {
 const tunnelingServer = net.createServer((socket) => {
   let sessionVars = addSession(socket)
 
-  console.log(getLogTime() + '[TUNNEL] NEW: ' + sessionVars.sessionId + ' →	' + sessionVars.sessionEndpoint)
+  console.log(getLogTime() + '[TUNNEL] NEW: ' + sessionVars.sessionId + ' → ' + sessionVars.sessionEndpoint)
 
   socket.on('data', (data) => {
     console.log(getLogTime() + '[TUNNEL] DATA: ', sessionVars.sessionId)

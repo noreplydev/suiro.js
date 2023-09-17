@@ -17,6 +17,7 @@ client.on('connect', (socket) => {
 client.on('data', async (data) => {
   const [requestID, unwrappedData] = data.toString().split('\n')
 
+  // request data
   const stream = unwrappedData.split('\n')
   const [method, route, httpVersion] = stream[0].split(' ')
 
@@ -34,34 +35,22 @@ client.on('data', async (data) => {
   const bodyOffset = Object.keys(headers).length + 2
   const body = stream.slice(bodyOffset).join('\n')
 
-  // const response = await fetch(`http://localhost:4545${route}`, {
-  //   method,
-  //   headers,
-  //   body: body.length > 0 ? body : undefined
-  // }).then(res => {
-  //   const headers = []
-
-  //   for (let [key, value] of res.headers.entries()) {
-  //     headers.push(`${key}: ${value}`)
-  //   }
-
-  //   console.log(` ${res.status} ${res.statusText}\n${headers.join('\n')}\n\n${res.body}`)
-  //   return `${res.type} ${res.status} ${res.statusText}\n${headers.join('\n')}\n\n${res.body}`
-  // }).catch(err => err.message)
-
-  // the response is here, no worries from 03:41 AM Cristian
-  // https://nodejs.org/api/http.html#httprequestoptions-callback
-
+  // fetch the host service
   const response = await new Promise((resolve, reject) => {
     const serviceResponse = {}
 
     const req = http.request({
       hostname: 'localhost',
       port: 4545,
-      path: '/',
-      method: 'GET'
+      path: route,
+      method: method,
+      headers: {
+        httpVersion: httpVersion,
+        ...headers
+      },
+
     }, (res) => {
-      // first line
+      // response info
       serviceResponse.httpVersion = 'HTTP/' + res.httpVersion
       serviceResponse.statusCode = res.statusCode
       serviceResponse.statusMessage = res.statusMessage
@@ -87,6 +76,10 @@ client.on('data', async (data) => {
       console.error('error on request', err);
       reject(err)
     })
+
+    if (body) {
+      req.write(body)
+    }
 
     req.end();
   })
