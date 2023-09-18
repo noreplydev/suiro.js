@@ -5,7 +5,8 @@
   "type": "commonjs",
   "main": "src/tunnel.js",
   "scripts": {
-    "start-tunnel": "node src/tunnel.js"
+    "tunnel": "node src/tunnel.js", 
+    "agent": "node src/client.js"
   },
   "keywords": [],
   "author": "",
