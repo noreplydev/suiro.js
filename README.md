@@ -1,5 +1,5 @@
 # Tunnel (building 🚧)
 
-Tunnel is an open-source project that aims to provide a simple and easy to use tool for creating and managing tunnels to your local network.
+Tunnel is an self-hosted and open-source project that aims to provide a simple and easy to use tool for creating and managing http tunnels to your local network.
 
-Expose your local network to the internet deploying a tunnel server somewhere Node.js is supported.
+It works by creating a tunnel between your local network and a public server, so you can access your local network from anywhere. 
