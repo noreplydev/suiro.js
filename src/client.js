@@ -5,6 +5,8 @@ require('dotenv').config({
   path: '../.env'
 })
 
+const servicePort = process.argv[2] || 80// third argument on cli
+
 const client = net.createConnection({
   host: process.env.TUNNELING_SERVER || 'localhost',
   port: 8080
@@ -39,9 +41,11 @@ client.on('data', async (data) => {
   const response = await new Promise((resolve, reject) => {
     const serviceResponse = {}
 
+    console.log('Fetching service localhost:', servicePort)
+
     const req = http.request({
       hostname: 'localhost',
-      port: 4545,
+      port: servicePort,
       path: route,
       method: method,
       headers: {
