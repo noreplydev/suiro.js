@@ -2,8 +2,8 @@ const net = require('net')
 const http = require('http')
 const { nanoid } = require('nanoid')
 const { createSession, secondsToMs, getSessionData } = require('alive-sessions')
-const { storeSession, getSessionID, removeSession } = require('./lib/sessions')
-const { getLogTime, toTitleCase } = require('./lib/utils')
+const { storeSession, getSessionID, removeSession } = require('../../../lib/sessions')
+const { getLogTime, toTitleCase } = require('../../../lib/utils')
 
 // http server for consumption
 http.createServer((req, res) => {

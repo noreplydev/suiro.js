@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "Expose your local network to the internet deploying a tunnel server somewhere Node.js is supported.",
   "type": "commonjs",
-  "main": "src/tunnel.js",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "tunnel": "node src/tunnel.js", 
-    "agent": "node src/client.js"
+    "tunnel": "npm run dev --workspace tunnel",
+    "agent": "npm run dev --workspace agent"
   },
   "keywords": [],
   "author": "",
