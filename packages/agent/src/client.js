@@ -1,33 +1,22 @@
 const net = require('net')
 const http = require('http')
+const commandLineArgs = require('command-line-args')
+const { flagsDeclaration } = require('./data/flagsDeclaration')
 
+// load .env file variables
 require('dotenv').config({
   path: '../.env'
 })
 
-const flagIndex = process.argv.findIndex((arg) => arg === '--port')
+// command line arguments
+const flags = commandLineArgs(flagsDeclaration)
 
-if (flagIndex === -1) {
-  console.log(`Tunnel agent  v0.0.1
-
-  command syntax: <command> <flag> <value>
-  usage: 
-    --port <port>  -  port of the service to be tunneled
-
-`)
-
-  process.exit(0)
+if (!flags.port) {
+  console.error('Missing required argument: port')
+  process.exit(1)
 }
 
-if (isNaN(process.argv[flagIndex + 1])) {
-  console.log(`
-    Error: port number must be present and be a number
-  `)
-
-  process.exit(0)
-}
-
-const servicePort = process.argv[flagIndex + 1]
+const servicePort = flags.port
 
 const client = net.createConnection({
   host: process.env.TUNNELING_SERVER || 'localhost',
