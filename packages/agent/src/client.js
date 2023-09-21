@@ -5,7 +5,29 @@ require('dotenv').config({
   path: '../.env'
 })
 
-const servicePort = process.argv[2] || 80// third argument on cli
+const flagIndex = process.argv.findIndex((arg) => arg === '--port')
+
+if (flagIndex === -1) {
+  console.log(`Tunnel agent  v0.0.1
+
+  command syntax: <command> <flag> <value>
+  usage: 
+    --port <port>  -  port of the service to be tunneled
+
+`)
+
+  process.exit(0)
+}
+
+if (isNaN(process.argv[flagIndex + 1])) {
+  console.log(`
+    Error: port number must be present and be a number
+  `)
+
+  process.exit(0)
+}
+
+const servicePort = process.argv[flagIndex + 1]
 
 const client = net.createConnection({
   host: process.env.TUNNELING_SERVER || 'localhost',
