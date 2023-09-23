@@ -15,8 +15,7 @@ http.createServer((req, res) => {
   });
 
   req.on('end', function () {
-    // _ to ignore the empty string at the start
-    const [_, requestEndpoint, ...hostRequestEndpoint] = req.url.split('/')
+    let [requestEndpoint, ...hostRequestEndpoint] = getRequestUrl(req)
 
     if (!requestEndpoint && !hostRequestEndpoint.length) {
       res.writeHead(200);
@@ -145,7 +144,7 @@ function addSession(socket) {
   // create a session and close after timeout
   createSession({
     sessionID: sessionId,
-    expireMs: secondsToMs(60),
+    expireMs: secondsToMs(200),
     data: {
       socket: socket,
       messageList: {},
@@ -160,4 +159,28 @@ function addSession(socket) {
   storeSession(sessionId, sessionEndpoint)
 
   return { sessionEndpoint, sessionId }
+}
+
+function getRequestUrl(req) {
+  const referer = req.headers.referer
+  const [requestEndpoint, ...hostRequestEndpoint] = req.url.split('/').slice(1)
+
+  // no referer means it's a first request
+  if (!referer) {
+    return [requestEndpoint, ...hostRequestEndpoint]
+  }
+
+  // if referer exists, it's possible that the request is a subrequest
+  const refererSlices = referer.split('/')
+  const refererEndpoint = refererSlices[3] // '0-http:'/'1'/'2-localhost:3000'/'3-endpoint'
+
+  // if the referer endpoint is the same as the request endpoint return 
+  // the normal request endpoint
+  if (refererEndpoint === requestEndpoint) {
+    return [requestEndpoint, ...hostRequestEndpoint]
+  }
+
+  // if the referer endpoint is not the same as the request endpoint
+  // it means that the request is a subrequest
+  return [refererEndpoint, ...[].concat(requestEndpoint, ...hostRequestEndpoint)]
 }

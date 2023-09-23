@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node ./src/client --port"
+    "dev": "node ./src/client --port 3002"
   },
   "keywords": [],
   "author": "",
