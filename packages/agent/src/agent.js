@@ -83,6 +83,9 @@ client.on('data', async (data) => {
       });
 
       res.on('end', () => {
+        // convert the body to base64
+        serviceResponse.body = Buffer.from(serviceResponse.body).toString('base64')
+
         resolve(serviceResponse)
       });
     });
@@ -99,8 +102,12 @@ client.on('data', async (data) => {
     req.end();
   })
 
+  const packetData = JSON.stringify(response)
+  const packetSize = Buffer.byteLength(packetData)
 
-  client.write(`${requestID}\n${JSON.stringify(response)}`)
+  console.log(packetSize)
+
+  client.write(`${requestID}:::${packetSize}\n\n\n${packetData}`)
 
   client.on('end', () => {
     console.log('client disconnected')

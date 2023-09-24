@@ -1,3 +1,4 @@
+const fs = require('fs')
 const net = require('net')
 const http = require('http')
 const { nanoid } = require('nanoid')
@@ -77,7 +78,10 @@ http.createServer((req, res) => {
         });
 
         // write the body
-        res.write(messageList[requestID].body)
+        const base64Body = messageList[requestID].body
+        const body = Buffer.from(base64Body, 'base64').toString('utf-8')
+
+        res.write(body)
         res.end();
 
         // remove the request from the message list
@@ -102,22 +106,59 @@ http.createServer((req, res) => {
 // tunneling service
 const tunnelingServer = net.createServer((socket) => {
   let sessionVars = addSession(socket)
+  let packetRequestID = ''
+  let packetAccData = ''
+  let packetAccSize = 0
 
   console.log(getLogTime() + '[TUNNEL] NEW: ' + sessionVars.sessionId + ' → ' + sessionVars.sessionEndpoint)
 
   socket.on('data', (data) => {
-    console.log(getLogTime() + '[TUNNEL] DATA: ', sessionVars.sessionId)
-    console.log('\n', data.toString(), '\n')
-
     const sessionData = getSessionData(sessionVars.sessionId)
 
-    // get first line which the requestID
-    const requestID = data.toString().split('\n')[0]
+    // check if the packet is splitted
+    if (packetRequestID !== '') {
+      // append the packet data
+      packetAccData += data.toString()
 
-    try {
-      sessionData.messageList[requestID] = JSON.parse(data.toString().split('\n')[1])
-    } catch (e) {
-      console.log('the agent responded with bad format')
+      console.log('acc', packetAccSize)
+      if (packetAccSize === Buffer.byteLength(packetAccData)) {
+        console.log(getLogTime() + '[TUNNEL] DATA: ', sessionVars.sessionId)
+
+        try {
+          sessionData.messageList[packetRequestID] = JSON.parse(packetAccData)
+        } catch (e) {
+          console.log('the agent responded with bad format')
+        }
+
+        // reset the packet manager values
+        packetAccSize = 0
+        packetAccData = ''
+        packetRequestID = ''
+      }
+
+      return // exit and wait for the next packet fragment
+    }
+
+    // check if the pcket length is fine
+    const [packetHeader, packetData] = data.toString().split('\n\n\n')
+    const [requestID, packetSize] = packetHeader.split(':::')
+
+    console.log('normal', packetSize, Buffer.byteLength(packetData))
+
+    // firse packet appear 
+    if (Number(packetSize) === Number(Buffer.byteLength(packetData))) {
+      console.log(getLogTime() + '[TUNNEL] DATA: ', sessionVars.sessionId)
+
+      try {
+        sessionData.messageList[requestID] = JSON.parse(packetData)
+      } catch (e) {
+        console.log('the agent responded with bad format')
+      }
+    } else {
+      // splitted packet
+      packetRequestID = requestID
+      packetAccSize = packetSize
+      packetAccData = packetData
     }
   })
 
