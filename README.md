@@ -4,4 +4,8 @@ Tunnel is an self-hosted and open-source project that aims to provide a simple a
 
 It works by creating a tunnel between your local network and a public server, so you can access your local network from anywhere. 
 
-It has an installable package which is the agent. with this agent you can start the connection with the tunneling server. 
+
+## Agent
+Tunnel has an agent which is the responsible for starting the connection with the tunneling 
+server.
+
