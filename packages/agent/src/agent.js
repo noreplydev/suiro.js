@@ -105,8 +105,6 @@ client.on('data', async (data) => {
   const packetData = JSON.stringify(response)
   const packetSize = Buffer.byteLength(packetData)
 
-  console.log(packetSize)
-
   client.write(`${requestID}:::${packetSize}\n\n\n${packetData}`)
 
   client.on('end', () => {

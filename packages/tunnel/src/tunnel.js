@@ -2,7 +2,7 @@ const fs = require('fs')
 const net = require('net')
 const http = require('http')
 const { nanoid } = require('nanoid')
-const { createSession, secondsToMs, getSessionData } = require('alive-sessions')
+const { createSession, secondsToMs, getSessionData, minutesToMs } = require('alive-sessions')
 const { storeSession, getSessionID, removeSession } = require('../../../lib/sessions')
 const { getLogTime, toTitleCase } = require('../../../lib/utils')
 
@@ -106,6 +106,8 @@ http.createServer((req, res) => {
 // tunneling service
 const tunnelingServer = net.createServer((socket) => {
   let sessionVars = addSession(socket)
+
+  // packet manager for tcp-segmentation
   let packetRequestID = ''
   let packetAccData = ''
   let packetTotalSize = 0
@@ -190,7 +192,7 @@ function addSession(socket) {
   // create a session and close after timeout
   createSession({
     sessionID: sessionId,
-    expireMs: secondsToMs(200),
+    expireMs: secondsToMs(20),
     data: {
       socket: socket,
       messageList: {},
