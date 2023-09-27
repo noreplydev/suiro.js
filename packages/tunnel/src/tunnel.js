@@ -108,6 +108,7 @@ const tunnelingServer = net.createServer((socket) => {
   let sessionVars = addSession(socket)
   let packetRequestID = ''
   let packetAccData = ''
+  let packetTotalSize = 0
   let packetAccSize = 0
 
   console.log(getLogTime() + '[TUNNEL] NEW: ' + sessionVars.sessionId + ' → ' + sessionVars.sessionEndpoint)
@@ -119,9 +120,10 @@ const tunnelingServer = net.createServer((socket) => {
     if (packetRequestID !== '') {
       // append the packet data
       packetAccData += data.toString()
+      packetAccSize += Buffer.byteLength(data)
 
-      console.log('acc', packetAccSize)
-      if (packetAccSize === Buffer.byteLength(packetAccData)) {
+      console.log('acc', packetTotalSize, packetAccSize)
+      if (packetTotalSize === packetAccSize) {
         console.log(getLogTime() + '[TUNNEL] DATA: ', sessionVars.sessionId)
 
         try {
@@ -132,6 +134,7 @@ const tunnelingServer = net.createServer((socket) => {
 
         // reset the packet manager values
         packetAccSize = 0
+        packetTotalSize = 0
         packetAccData = ''
         packetRequestID = ''
       }
@@ -143,22 +146,24 @@ const tunnelingServer = net.createServer((socket) => {
     const [packetHeader, packetData] = data.toString().split('\n\n\n')
     const [requestID, packetSize] = packetHeader.split(':::')
 
-    console.log('normal', packetSize, Buffer.byteLength(packetData))
+    packetAccData += packetData
+    console.log('normal', packetSize, Buffer.byteLength(packetAccData))
 
     // firse packet appear 
-    if (Number(packetSize) === Number(Buffer.byteLength(packetData))) {
+    if (Number(packetSize) === Number(Buffer.byteLength(packetAccData))) {
       console.log(getLogTime() + '[TUNNEL] DATA: ', sessionVars.sessionId)
 
       try {
-        sessionData.messageList[requestID] = JSON.parse(packetData)
+        sessionData.messageList[requestID] = JSON.parse(packetAccData)
       } catch (e) {
         console.log('the agent responded with bad format')
       }
     } else {
       // splitted packet
       packetRequestID = requestID
-      packetAccSize = packetSize
+      packetAccSize = Buffer.byteLength(packetData)
       packetAccData = packetData
+      packetTotalSize = Number(packetSize)
     }
   })
 
