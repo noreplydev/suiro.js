@@ -52,6 +52,19 @@ function removeSession(sessionEndpoint) {
 
   // remove session
   delete sessions[sessionEndpoint]
+
+  // write the file with the session removed
+  try {
+    const content = fs.readFileSync(PATH)
+    const jsonObject = JSON.parse(content)
+
+    delete jsonObject[sessionEndpoint]
+
+    fs.writeFileSync(PATH, JSON.stringify(jsonObject))
+  } catch (e) {
+    return false
+  }
+
   return true
 }
 
