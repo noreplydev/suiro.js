@@ -19,9 +19,10 @@ The exposed API is responsible for managing the connections and the tunneling se
 Tunnel has an agent which is the responsible for starting the connection with the tunneling server.
 
 ## Limitations
-Tunnel is still in development and but we can predict some limitations that will be present in the first release.
+Tunnel is still in development but we can predict some limitations that will be present in the first release.
 
-- When a exposed service like a react app refers to a local resource (like an image) with relative routes it will not work because the browser will try to find the resource in the server instead of the local network. To solve this the tunneling server uses the referer header to redirect the request to the local network but this header is not required by the HTTP protocol so it can be missing in some cases.
+#### · Url resolution
+When a exposed service like a react app refers to a local resource (like an image) with relative routes it could not work. When a resource is requested using relative routes the browser will try to find the resource in the server. To be more clear, if the service endpoint is `https://52.23.234.23/8noiasdb238` and the resource is `/static/image.png` the browser will try to find the resource in `https://52.23.234.23/static/image.png` instead of `https://52.23.234.23/8noiasdb238/static/image.png` so to solve this, the tunneling server uses the referer header to make url resolution but this header is not required by the HTTP protocol so it can be missing in some cases. 
 
 ## License
 Tunnel is licensed under the MIT license.
