@@ -52,7 +52,7 @@ client.on('data', async (data) => {
   const response = await new Promise((resolve, reject) => {
     const serviceResponse = {}
 
-    console.log('Fetching service localhost:', servicePort)
+    console.log('Fetching service:', servicePort)
 
     const req = http.request({
       hostname: 'localhost',

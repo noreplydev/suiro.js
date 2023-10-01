@@ -31,11 +31,10 @@ http.createServer((req, res) => {
     const sessionID = getSessionID(requestEndpoint)
 
     try {
-      // if something wrong with the sessionID an error will be thrown
-      // by the lib
+      // if the sessionID is not found, throw an error
       getSessionData(sessionID)
     } catch (e) {
-      console.log(getLogTime() + '[TUNNEL] ERROR: Unhandled route ' + requestEndpoint)
+      console.log(getLogTime() + '[TUNNEL] ERROR: Unhandled route `' + requestEndpoint + '`')
       res.writeHead(404);
       res.end("<h1>404 Not Found</h1>");
       return
@@ -65,10 +64,11 @@ http.createServer((req, res) => {
     // send the request to the client
     sessionData.socket.write(request)
 
-    // wait for the response
-    const interval = setInterval(() => {
-      const messageList = getSessionData(sessionID).messageList
+    // get the message list
+    const messageList = sessionData.messageList
 
+    // wait for the response appear in the message list
+    const interval = setInterval(() => {
       if (messageList[requestID]) {
         const hostResponse = messageList[requestID]
 
@@ -124,7 +124,6 @@ const tunnelingServer = net.createServer((socket) => {
       packetAccData += data.toString()
       packetAccSize += Buffer.byteLength(data)
 
-      console.log('acc', packetTotalSize, packetAccSize)
       if (packetTotalSize === packetAccSize) {
         console.log(getLogTime() + '[TUNNEL] DATA: ', sessionVars.sessionId)
 
@@ -148,15 +147,12 @@ const tunnelingServer = net.createServer((socket) => {
     const [packetHeader, packetData] = data.toString().split('\n\n\n')
     const [requestID, packetSize] = packetHeader.split(':::')
 
-    packetAccData += packetData
-    console.log('normal', packetSize, Buffer.byteLength(packetAccData))
-
     // firse packet appear 
-    if (Number(packetSize) === Number(Buffer.byteLength(packetAccData))) {
+    if (Number(packetSize) === Number(Buffer.byteLength(packetData))) {
       console.log(getLogTime() + '[TUNNEL] DATA: ', sessionVars.sessionId)
 
       try {
-        sessionData.messageList[requestID] = JSON.parse(packetAccData)
+        sessionData.messageList[requestID] = JSON.parse(packetData)
       } catch (e) {
         console.log('the agent responded with bad format')
       }
@@ -192,7 +188,7 @@ function addSession(socket) {
   // create a session and close after timeout
   createSession({
     sessionID: sessionId,
-    expireMs: secondsToMs(20),
+    expireMs: minutesToMs(1),
     data: {
       socket: socket,
       messageList: {},
