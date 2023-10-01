@@ -1,5 +1,5 @@
 {
-  "name": "sui",
+  "name": "suiro",
   "description": "Sui is the agent for suito tunneling server",
   "version": "0.0.1",
   "main": "src/agent.js",
