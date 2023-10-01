@@ -1,12 +1,22 @@
 {
-  "name": "agent",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "sui",
+  "description": "Sui is the agent for suito tunneling server",
+  "version": "0.0.1",
+  "main": "src/agent.js",
   "scripts": {
     "dev": "node ./src/agent --port 3001"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "tunneling",
+    "agent",
+    "suito",
+    "sui",
+    "http"
+  ],
+  "author": "noreplydev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noreplydev/suito.git"
+  },
+  "license": "MIT"
 }
