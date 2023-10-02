@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const net = require('net')
 const http = require('http')
 const commandLineArgs = require('command-line-args')

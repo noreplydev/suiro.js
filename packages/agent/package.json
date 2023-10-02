@@ -1,7 +1,9 @@
 {
   "name": "suiro",
+  "preferGlobal": true,
+  "bin": "./src/agent.js",
   "description": "Sui is the agent for suito tunneling server",
-  "version": "0.0.1",
+  "version": "0.0.2rf",
   "main": "src/agent.js",
   "scripts": {
     "dev": "node ./src/agent --port 3001"
@@ -17,6 +19,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/noreplydev/suito.git"
+  },
+  "dependencies": {
+    "command-line-args": "5.2.1"
   },
   "license": "MIT"
 }
