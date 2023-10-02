@@ -38,6 +38,7 @@ const hostName = flags.host.split(':')[0]
 const hostPort = flags.host.split(':')[1]
 const servicePort = flags.port
 
+// connect to the tunneling server
 const client = net.createConnection({
   host: hostName || 'localhost',
   port: hostPort || 8080
@@ -109,14 +110,14 @@ client.on('data', async (data) => {
       res.on('end', () => {
         // convert the body to base64
         serviceResponse.body = Buffer.from(serviceResponse.body).toString('base64')
-
         resolve(serviceResponse)
       });
     });
 
     req.on('error', (err) => {
-      console.error('error on request', err);
+      console.log('[ERROR] Local service is not running')
       reject(err)
+      process.exit(1)
     })
 
     if (body) {
