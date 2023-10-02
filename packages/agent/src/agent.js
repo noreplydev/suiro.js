@@ -5,24 +5,46 @@ const http = require('http')
 const commandLineArgs = require('command-line-args')
 const { flagsDeclaration } = require('./data/flagsDeclaration')
 
-// load .env file variables
-require('dotenv').config({
-  path: '../.env'
-})
-
 // command line arguments
 const flags = commandLineArgs(flagsDeclaration)
+
+if (Object.keys(flags).length < 1) {
+  console.log(`
+                  
+                     
+  █████   ███  ███   ███  ████████   ██████ 
+ ███░░  ░░███ ░███ ░░███ ░░███░░██  ███░░███
+░░█████  ░███ ░███  ░███  ░███ ░░░ ░███ ░███
+ ░░░░███ ░███ ░███  ░███  ░███     ░███ ░███
+ ██████  ░░██████    ███  ████     ░░██████ 
+░░░░░░    ░░░░░░░    ░░░ ░░░░░       ░░░░░  
+                                             
+v.0.0.2                           
+  `)
+  process.exit(0)
+}
 
 if (!flags.port) {
   console.error('Missing required argument: port')
   process.exit(1)
 }
 
+if (!flags.host) {
+  console.error('Missing required argument: host')
+  process.exit(1)
+}
+
+const hostName = flags.host.split(':')[0]
+const hostPort = flags.host.split(':')[1]
 const servicePort = flags.port
 
 const client = net.createConnection({
-  host: process.env.TUNNELING_SERVER || 'localhost',
-  port: 8080
+  host: hostName || 'localhost',
+  port: hostPort || 8080
+})
+
+client.on('error', (err) => {
+  console.log('[ERROR] Cannot connect to the host: ', flags.host)
 })
 
 client.on('connect', (socket) => {

@@ -6,7 +6,7 @@
   "version": "0.0.2rf",
   "main": "src/agent.js",
   "scripts": {
-    "dev": "node ./src/agent --port 3001"
+    "dev": "node ./src/agent --port 3001 -s 52.324.234.32:8080"
   },
   "keywords": [
     "tunneling",

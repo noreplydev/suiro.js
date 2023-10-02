@@ -7,8 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "tunnel": "npm run dev --workspace tunnel",
-    "agent": "npm run dev --workspace agent"
+    "tunnel": "npm run dev --workspace suiro-server",
+    "agent": "npm run dev --workspace suiro"
   },
   "keywords": [],
   "author": "",
