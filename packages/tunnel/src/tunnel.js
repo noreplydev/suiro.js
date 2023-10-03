@@ -114,6 +114,7 @@ const tunnelingServer = net.createServer((socket) => {
   let packetAccSize = 0
 
   console.log(getLogTime() + '[TUNNEL] NEW: ' + sessionVars.sessionId + ' → ' + sessionVars.sessionEndpoint)
+  socket.write(`connection\n${sessionVars.sessionEndpoint}`)
 
   socket.on('data', (data) => {
     const sessionData = getSessionData(sessionVars.sessionId)

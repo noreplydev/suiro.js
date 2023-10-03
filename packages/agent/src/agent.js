@@ -10,7 +10,6 @@ const flags = commandLineArgs(flagsDeclaration)
 
 if (Object.keys(flags).length < 1) {
   console.log(`
-                  
                      
   █████   ███  ███   ███  ████████   ██████ 
  ███░░  ░░███ ░███ ░░███ ░░███░░██  ███░░███
@@ -20,6 +19,7 @@ if (Object.keys(flags).length < 1) {
 ░░░░░░    ░░░░░░░    ░░░ ░░░░░       ░░░░░  
                                              
 v.0.0.2                           
+
   `)
   process.exit(0)
 }
@@ -53,6 +53,12 @@ client.on('connect', (socket) => {
 })
 
 client.on('data', async (data) => {
+  const connectionStream = data.toString().split('\n')
+  if (connectionStream[0] === 'connection') {
+    console.log(`[SOURI] Service ${servicePort} available on ${hostName}:${hostPort}/${connectionStream[1]}`)
+    return
+  }
+
   const [requestID, unwrappedData] = data.toString().split('\n')
 
   // request data
