@@ -18,7 +18,7 @@ if (Object.keys(flags).length < 1) {
  ██████  ░░██████    ███  ████     ░░██████ 
 ░░░░░░    ░░░░░░░    ░░░ ░░░░░       ░░░░░  
                                              
-v.0.0.2                           
+v.0.1.1-rf                           
 
   `)
   process.exit(0)
@@ -56,7 +56,7 @@ client.on('data', async (data) => {
   const connectionStream = data.toString().split('\n')
 
   if (connectionStream[0] === 'connection') {
-    console.log(`[SOURI] Service ${servicePort} available on ${hostName}:${hostPort}/${connectionStream[1]}`)
+    console.log(`[SOURI] Service ${servicePort} available on ${hostName}:3000/${connectionStream[1]}`)
     return
   }
 

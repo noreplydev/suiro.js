@@ -3,7 +3,7 @@
   "preferGlobal": true,
   "bin": "./src/agent.js",
   "description": "Sui is the agent for suito tunneling server",
-  "version": "0.1.1",
+  "version": "0.1.1-rf",
   "main": "src/agent.js",
   "scripts": {
     "dev": "node ./src/agent -p 3001 -s localhost:8080"
