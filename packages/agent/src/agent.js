@@ -54,6 +54,7 @@ client.on('connect', (socket) => {
 
 client.on('data', async (data) => {
   const connectionStream = data.toString().split('\n')
+
   if (connectionStream[0] === 'connection') {
     console.log(`[SOURI] Service ${servicePort} available on ${hostName}:${hostPort}/${connectionStream[1]}`)
     return
