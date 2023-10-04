@@ -18,7 +18,7 @@ if (Object.keys(flags).length < 1) {
  ██████  ░░██████    ███  ████     ░░██████ 
 ░░░░░░    ░░░░░░░    ░░░ ░░░░░       ░░░░░  
                                              
-v.0.1.1-rf                           
+v.0.2.1-rf                           
 
   `)
   process.exit(0)
@@ -36,6 +36,7 @@ if (!flags.host) {
 
 const hostName = flags.host.split(':')[0]
 const hostPort = flags.host.split(':')[1]
+const hostEndpointPort = flags['endpoint-port']
 const servicePort = flags.port
 
 // connect to the tunneling server
@@ -56,7 +57,7 @@ client.on('data', async (data) => {
   const connectionStream = data.toString().split('\n')
 
   if (connectionStream[0] === 'connection') {
-    console.log(`[SOURI] Service ${servicePort} available on ${hostName}:3000/${connectionStream[1]}`)
+    console.log(`[SOURI] Service ${servicePort} available on ${hostName}:${hostEndpointPort || '3000'}/${connectionStream[1]}`)
     return
   }
 

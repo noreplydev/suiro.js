@@ -6,7 +6,7 @@
   "version": "0.1.1-rf",
   "main": "src/agent.js",
   "scripts": {
-    "dev": "node ./src/agent -p 3001 -s localhost:8080"
+    "dev": "node ./src/agent -p 3001 -s localhost:8080 -e 4000"
   },
   "keywords": [
     "tunneling",

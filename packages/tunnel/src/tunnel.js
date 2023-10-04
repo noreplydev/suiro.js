@@ -99,7 +99,7 @@ http.createServer((req, res) => {
     console.error(err);
   })
 
-}).listen(3000, () => {
+}).listen(4000, () => {
   console.log(getLogTime() + '[HTTP] Listening on port 3000')
 })
 

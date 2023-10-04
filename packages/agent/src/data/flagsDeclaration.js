@@ -14,6 +14,13 @@ const flagsDeclaration = [
     typeLabel: '<host:port>',
   },
   {
+    name: 'endpoint-port',
+    alias: 'e',
+    type: String,
+    description: 'Tunneling server endpoint port',
+    typeLabel: '<port>',
+  },
+  {
     name: 'help',
     alias: 'h',
     type: Boolean,
