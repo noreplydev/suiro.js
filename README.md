@@ -20,6 +20,15 @@ The exposed API is responsible for managing the connections and the tunneling se
 ## Agent
 Tunnel has an agent which is the responsible for starting the connection with the tunneling server.
 
+### Stablishing a connection
+To stablish a connection with the tunneling server the agent needs to know the local exposed port, the tunneling socket and the http port.
+
+The local exposed port is the port that the agent will expose in the tunneling server, the tunneling socket is the socket that the agent will use to communicate with the tunneling server and the http port which is the port where our server is running the http server. 
+
+```
+suiro -p <local-exposed-port> -s <tunneling-socket> -e <http-port>
+```
+
 ## Limitations
 Suiro is still in development but we can predict some limitations that will be present in the first release.
 
