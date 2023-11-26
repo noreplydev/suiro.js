@@ -8,6 +8,8 @@ const { flagsDeclaration } = require('./data/flagsDeclaration')
 // command line arguments
 const flags = commandLineArgs(flagsDeclaration)
 
+let responsesCounter = 0;
+
 if (Object.keys(flags).length < 1) {
   console.log(`
                      
@@ -45,105 +47,112 @@ const client = net.createConnection({
   port: hostPort || 8080
 })
 
+client.setMaxListeners(200)
+
 client.on('error', (err) => {
   console.log('[ERROR] Cannot connect to the host: ', flags.host)
 })
 
 client.on('connect', (socket) => {
-  console.log('connected to tunneling server')
+  console.log('[SUIRO] Connected, max listeners: ', client.getMaxListeners())
 })
 
-client.on('data', async (data) => {
+client.on('data', (data) => {
   const connectionStream = data.toString().split('\n')
-
   if (connectionStream[0] === 'connection') {
-    console.log(`[SOURI] Service ${servicePort} available on ${hostName}:${hostEndpointPort || '3000'}/${connectionStream[1]}`)
+    console.log(`[SUIRO] Service ${servicePort} available on ${hostName}:${hostEndpointPort || '3000'}/${connectionStream[1]}`)
     return
   }
 
-  const [requestID, unwrappedData] = data.toString().split('\n')
+  // check if multiple requests are chunked
+  const requests = data
+    .toString()
+    .split('<<<EOF>>>')
+    .filter((request) => request)
 
-  // request data
-  const stream = unwrappedData.split('\n')
-  const [method, route, httpVersion] = stream[0].split(' ')
+  requests.forEach(async (request, i) => {
+    const [requestID, ...stream] = request.split('\n')
 
-  const headers = {}
+    // request data
+    const [method, route, httpVersion] = stream[0].split(' ')
+    const headers = {}
 
-  for (let i = 1; i < stream.length; i++) {
-    if (stream[i] === '') {
-      break // until the headers end
+    for (let i = 1; i < stream.length; i++) {
+      if (stream[i] === '') {
+        break // until the headers end
+      }
+
+      const [key, value] = stream[i].split(': ')
+      headers[key] = value
     }
 
-    const [key, value] = stream[i].split(': ')
-    headers[key] = value
-  }
+    const bodyOffset = Object.keys(headers).length + 2
+    const body = stream.slice(bodyOffset).join('\n')
 
-  const bodyOffset = Object.keys(headers).length + 2
-  const body = stream.slice(bodyOffset).join('\n')
+    // fetch the host service
+    const response = await new Promise((resolve, reject) => {
+      const serviceResponse = {}
 
-  // fetch the host service
-  const response = await new Promise((resolve, reject) => {
-    const serviceResponse = {}
+      console.log('[SUIRO] Fetching port:', servicePort)
 
-    console.log('Fetching service:', servicePort)
+      const req = http.request({
+        hostname: 'localhost',
+        port: servicePort,
+        path: route,
+        method: method,
+        headers: {
+          httpVersion: httpVersion,
+          ...headers
+        },
 
-    const req = http.request({
-      hostname: 'localhost',
-      port: servicePort,
-      path: route,
-      method: method,
-      headers: {
-        httpVersion: httpVersion,
-        ...headers
-      },
+      }, (res) => {
+        // response info
+        serviceResponse.httpVersion = 'HTTP/' + res.httpVersion
+        serviceResponse.statusCode = res.statusCode
+        serviceResponse.statusMessage = res.statusMessage
 
-    }, (res) => {
-      // response info
-      serviceResponse.httpVersion = 'HTTP/' + res.httpVersion
-      serviceResponse.statusCode = res.statusCode
-      serviceResponse.statusMessage = res.statusMessage
+        // headers object
+        serviceResponse.headers = res.headers
 
-      // headers object
-      serviceResponse.headers = res.headers
+        // body stream
+        serviceResponse.body = ''
 
-      // body stream
-      serviceResponse.body = ''
+        res.on('data', (chunk) => {
+          if (chunk) {
+            serviceResponse.body += chunk
+          }
+        });
 
-      res.on('data', (chunk) => {
-        if (chunk) {
-          serviceResponse.body += chunk
-        }
+        res.on('end', () => {
+          // convert the body to base64
+          serviceResponse.body = Buffer.from(serviceResponse.body).toString('base64')
+          resolve(serviceResponse)
+        });
       });
 
-      res.on('end', () => {
-        // convert the body to base64
-        serviceResponse.body = Buffer.from(serviceResponse.body).toString('base64')
-        resolve(serviceResponse)
-      });
-    });
+      req.on('error', (err) => {
+        console.log('[ERROR] Local service is not running')
+        reject(err)
+        process.exit(1)
+      })
 
-    req.on('error', (err) => {
-      console.log('[ERROR] Local service is not running')
-      reject(err)
-      process.exit(1)
+      if (body) {
+        req.write(body)
+      }
+
+      req.end();
     })
 
-    if (body) {
-      req.write(body)
-    }
+    const packetData = JSON.stringify(response)
+    const packetSize = Buffer.byteLength(packetData)
 
-    req.end();
+    responsesCounter++
+    console.log('[SUIRO] Response sent: ', body)
+    client.write(`${requestID}:::${packetSize}\n\n\n${packetData}`)
   })
-
-  const packetData = JSON.stringify(response)
-  const packetSize = Buffer.byteLength(packetData)
-
-  client.write(`${requestID}:::${packetSize}\n\n\n${packetData}`)
-
-  client.on('end', () => {
-    console.log('client disconnected')
-    client.end()
-  })
-
 })
 
+client.on('end', () => {
+  console.log('[SUIRO] Connection closed')
+  client.end()
+})
